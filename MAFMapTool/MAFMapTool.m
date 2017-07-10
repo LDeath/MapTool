@@ -19,7 +19,7 @@
 
 @end
 
-@implementation MAFMapTool
+@implementation MAFMapTool  
 
 - (MAMapView *)mapView {
     if (_mapView == nil) {

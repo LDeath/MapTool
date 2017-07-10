@@ -17,7 +17,7 @@
 @property (nonatomic, strong) AMapLocationManager *locationManager;
 
 + (instancetype)sharedInstance;
-
+  
 /**
  初始化地图sdk
  */
