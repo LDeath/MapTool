@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   s.license      = { :type => "MIT", :file => "LICENSE" }
 
   s.author       = { "高赛" => "395765302@qq.com" }
-  s.source       = { :git => "https://github.com/LDeath/MapTool.git", :commit => 'da24338' }
+  s.source       = { :git => "https://github.com/LDeath/MapTool.git", :tag => s.version }
 
   s.ios.deployment_target = '7.0'
 
