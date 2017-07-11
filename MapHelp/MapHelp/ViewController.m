@@ -48,9 +48,9 @@
 //    [self.mapTool singleLocationWithLocationBlock:^(BOOL isSuccess, NSString *latitude, NSString *longitude, BOOL isHaveInfo, NSString *address, NSString *name, NSString *cityCode, NSString *adCode) {
 //        
 //    }];
-    [self.mapTool startAlwaysLocationWithLocationBlock:^(BOOL isSuccess, NSString *latitude, NSString *longitude, BOOL isHaveInfo, NSString *address, NSString *name, NSString *cityCode, NSString *adCode) {
-        
-    }];
+//    [self.mapTool startAlwaysLocationWithLocationBlock:^(BOOL isSuccess, NSString *latitude, NSString *longitude, BOOL isHaveInfo, NSString *address, NSString *name, NSString *cityCode, NSString *adCode) {
+//        
+//    }];
     
 //    [self.mapTool searchKeyWord:@"舜泰广场" andPage:1];
     

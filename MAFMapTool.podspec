@@ -9,7 +9,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MAFMapTool"
-  s.version      = "0.1.2"
+  s.version      = "0.1.3"
   s.summary      = "高德地图常用方法封装"
   
   s.homepage     = "https://github.com/LDeath/MapTool"
@@ -22,7 +22,7 @@ Pod::Spec.new do |s|
 
   s.source_files  = 'MAFMapTool', 'MAFMapTool/**/*.{h,m}'
 
-  s.frameworks = 'MAMapKit','AMapLocationKit','AMapSearchKit'
+  s.frameworks = 'UIKit','Foundation'
 
   s.dependency 'AMap3DMap', '~> 5.0.0'
   s.dependency 'AMapSearch', '~> 5.0.0'
