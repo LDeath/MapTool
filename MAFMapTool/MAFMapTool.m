@@ -7,19 +7,45 @@
 //
 
 #import "MAFMapTool.h"
+#import <MAMapKit/MAMapKit.h>
+#import <AMapFoundationKit/AMapFoundationKit.h>
+#import <AMapLocationKit/AMapLocationKit.h>
+#import <AMapSearchKit/AMapSearchKit.h>
 
 @interface MAFMapTool()<AMapLocationManagerDelegate, MAMapViewDelegate, AMapSearchDelegate>
 
-// 是否开启了持续定位 (yes开启 no关闭 )
-@property (nonatomic, assign) BOOL isStratAlwaysLocation;
+/**
+ 地图视图
+ */
 @property (nonatomic, strong) MAMapView *mapView;
-@property (nonatomic, strong) MAPointAnnotation *annotation;
-@property (nonatomic, strong) AMapSearchAPI *search;
+/**
+ 地图视图的大小
+ */
 @property ( nonatomic, assign) CGRect frame;
+/**
+ 地图中心标注
+ */
+@property (nonatomic, strong) MAPointAnnotation *annotation;
+/**
+ 检索api
+ */
+@property (nonatomic, strong) AMapSearchAPI *search;
+/**
+ 定位api
+ */
+@property (nonatomic, strong) AMapLocationManager *locationManager;
+/**
+ 是否开启了持续定位 (yes开启 no关闭 )
+ */
+@property (nonatomic, assign) BOOL isStratAlwaysLocation;
+/**
+ 是否开启周边搜索
+ */
+@property (nonatomic, assign) BOOL isNeedSearch;
 
 @end
 
-@implementation MAFMapTool  
+@implementation MAFMapTool
 
 - (MAMapView *)mapView {
     if (_mapView == nil) {
@@ -68,7 +94,7 @@
 /**
  根据frame获取地图视图
  */
-- (MAMapView *)getMAMapViewWithFrame:(CGRect )frame {
+- (UIView *)getMAMapViewWithFrame:(CGRect )frame {
     
     self.frame = frame;
 
@@ -79,6 +105,7 @@
  需要显示大头针
  */
 - (void)needShowAnnotationWithIsNeedSearch:(BOOL)isNeedSearch {
+    self.isNeedSearch = isNeedSearch;
     self.annotation = [[MAPointAnnotation alloc] init];
     self.annotation.lockedToScreen = YES;
     self.annotation.lockedScreenPoint = CGPointMake(self.mapView.center.x, self.mapView.center.y);
@@ -89,7 +116,9 @@
     [mapView deselectAnnotation:self.annotation animated:NO];
 }
 - (void)mapView:(MAMapView *)mapView mapDidMoveByUser:(BOOL)wasUserAction {
-    [self searchPOIWithPage:1];
+    if (self.isNeedSearch) {
+        [self searchPOIWithPage:1];
+    }
 }
 - (MAAnnotationView *)mapView:(MAMapView *)mapView viewForAnnotation:(id<MAAnnotation>)annotation {
     if ([annotation isKindOfClass:[MAPointAnnotation class]])
@@ -129,7 +158,7 @@
     AMapPOIAroundSearchRequest *request = [[AMapPOIAroundSearchRequest alloc] init];
     
     request.location            = [AMapGeoPoint locationWithLatitude:self.mapView.region.center.latitude longitude:self.mapView.region.center.longitude];
-    request.keywords            = @"汽车服务|汽车销售|汽车维修|摩托车服务|餐饮服务|购物服务|生活服务|体育休闲服务|医疗保健服务|住宿服务|风景名胜|商务住宅|政府机构及社会团体|科教文化服务|交通设施服务|金融保险服务|公司企业|道路附属设施|地名地址信息|公共设施";
+    request.keywords            = @"汽车服务|汽车销售|汽车维修|摩托车服务|餐饮服务|购物服务|体育休闲服务|医疗保健服务|住宿服务|风景名胜|商务住宅|政府机构及社会团体|科教文化服务|交通设施服务|金融保险服务|公司企业|道路附属设施|地名地址信息|公共设施";
     /* 按照距离排序. */
     request.sortrule            = 0;
     request.requireExtension    = YES;
@@ -141,15 +170,20 @@
 #pragma mark AMapSearchDelegate检索代理
 - (void)onPOISearchDone:(AMapPOISearchBaseRequest *)request response:(AMapPOISearchResponse *)response {
     if (request.offset == 20) {// 关键字检索
-        if (response.pois.count == 0)
-        {
-            
+        if (self.keyWordSearchBlock == NULL || self.keyWordSearchBlock == nil) {
+            return;
         }
+        self.keyWordSearchBlock(response.pois, request.page);
     } else {// 位置检索
-        if (response.pois.count == 0)
-        {
-            
+        if (request.page == 1) {
+            AMapPOI *poiModel = response.pois.firstObject;
+            self.annotation.title = poiModel.name;
+            self.annotation.subtitle = poiModel.address;
         }
+        if (self.poiSearchBlock == NULL || self.poiSearchBlock == nil) {
+            return;
+        }
+        self.poiSearchBlock(response.pois, request.page);
     }
 }
 #pragma mark 离线地图
@@ -158,9 +192,6 @@
  */
 - (void)setOfflineMap {
     NSArray *cityArr = [MAOfflineMap sharedOfflineMap].cities;
-    NSArray *proArr = [MAOfflineMap sharedOfflineMap].provinces;
-    NSString *version = [MAOfflineMap sharedOfflineMap].version;
-    NSLog(@"cityArr:%@,provincesArr:%@,version:%@",cityArr,proArr,version);
     if (cityArr == nil || cityArr.count == 0) {
         [[MAOfflineMap sharedOfflineMap] setupWithCompletionBlock:^(BOOL setupSuccess) {
             NSLog(@"%d",setupSuccess);
@@ -175,6 +206,10 @@
         if (!hasNewestVersion) {// 不需要更新
             return;
         }
+        if (self.offlineUpdateBlock == NULL || self.offlineUpdateBlock == nil) {
+            return;
+        }
+        self.offlineUpdateBlock(YES);
     }];
 }
 /**
@@ -236,14 +271,20 @@
 }
 - (void)downloadOfflineMapWithItem:(MAOfflineItem *)item {
     [[MAOfflineMap sharedOfflineMap] downloadItem:item shouldContinueWhenAppEntersBackground:YES downloadBlock:^(MAOfflineItem *downloadItem, MAOfflineMapDownloadStatus downloadStatus, id info) {
+        
+        if (self.offlineDownloadBlock == NULL || self.offlineDownloadBlock == nil) {
+            return;
+        }
         if (downloadStatus == MAOfflineMapDownloadStatusCompleted) {// 下载成功
-            
+            self.offlineDownloadBlock(0);
         } else if (downloadStatus == MAOfflineMapDownloadStatusCancelled) {// 取消
-            
+            self.offlineDownloadBlock(1);
         } else if (downloadStatus == MAOfflineMapDownloadStatusError) {// 发生错误
-            
+            self.offlineDownloadBlock(2);
+        } else if (downloadStatus == MAOfflineMapDownloadStatusProgress) {// 下载过程中
+            self.offlineDownloadBlock(3);
         } else if (downloadStatus == MAOfflineMapDownloadStatusFinished) {// 全部下载完成
-            
+            self.offlineDownloadBlock(4);
         }
     }];
 }
@@ -256,6 +297,8 @@
     self.locationManager.delegate = self;
     //设置定位最小更新距离方法如下，单位米。当两次定位距离满足设置的最小更新距离时，SDK会返回符合要求的定位结果
     self.locationManager.distanceFilter = 200;
+    //持续定位是否返回逆地理信息，默认NO
+    self.locationManager.locatingWithReGeocode = YES;
     //iOS 9（包含iOS 9）之后新特性：将允许出现这种场景，同一app中多个locationmanager：一些只能在前台定位，另一些可在后台定位，并可随时禁止其后台定位。
     if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 9) {
         self.locationManager.allowsBackgroundLocationUpdates = YES;
@@ -267,7 +310,8 @@
 /**
  发起单次定位
  */
-- (void)singleLocation {
+- (void)singleLocationWithLocationBlock:(MapLocationBlock )locationBlock {
+    self.signleLocationBlock = locationBlock;
     // 带逆地理信息的一次定位（返回坐标和地址信息）
     [self.locationManager setDesiredAccuracy:kCLLocationAccuracyHundredMeters];
     //   定位超时时间，最低2s，此处设置为2s
@@ -276,24 +320,28 @@
     self.locationManager.reGeocodeTimeout = 5;
     // 带逆地理（返回坐标和地址信息）。将下面代码中的 YES 改成 NO ，则不会返回地址信息。
     [self.locationManager requestLocationWithReGeocode:YES completionBlock:^(CLLocation *location, AMapLocationReGeocode *regeocode, NSError *error) {
-        if (error)
-        {
-            NSLog(@"locError:{%ld - %@};", (long)error.code, error.localizedDescription);
+        if (error) {
+            self.signleLocationBlock(NO, @"", @"", NO, @"", @"", @"", @"");
             if (error.code == AMapLocationErrorLocateFailed) {
                 return;
             }
+            return;
         }
-        NSLog(@"location:%@", location);
+        NSString *latitude = [NSString stringWithFormat:@"%f", location.coordinate.latitude];
+        NSString *longitude = [NSString stringWithFormat:@"%f", location.coordinate.longitude];
         if (regeocode) {
-            NSLog(@"reGeocode:%@", regeocode);
+            self.signleLocationBlock(YES, latitude, longitude, YES, regeocode.formattedAddress, regeocode.POIName, regeocode.citycode, regeocode.adcode);
+        } else {
+            self.signleLocationBlock(YES, latitude, longitude, NO, @"", @"", @"", @"");
         }
     }];
 }
 /**
  开启持续定位
  */
-- (void)startAlwaysLocation {
+- (void)startAlwaysLocationWithLocationBlock:(MapLocationBlock )locationBlock {
     if (!self.isStratAlwaysLocation) {
+        self.alwaysLocationBlock = locationBlock;
         [self.locationManager setLocatingWithReGeocode:YES];
         [self.locationManager startUpdatingLocation];
         self.isStratAlwaysLocation = YES;
@@ -308,10 +356,13 @@
 #pragma mark AMapLocationManagerDelegate定位代理
 - (void)amapLocationManager:(AMapLocationManager *)manager didUpdateLocation:(CLLocation *)location reGeocode:(AMapLocationReGeocode *)reGeocode
 {
-    NSLog(@"location:{lat:%f; lon:%f; accuracy:%f}", location.coordinate.latitude, location.coordinate.longitude, location.horizontalAccuracy);
+    NSString *latitude = [NSString stringWithFormat:@"%f", location.coordinate.latitude];
+    NSString *longitude = [NSString stringWithFormat:@"%f", location.coordinate.longitude];
     if (reGeocode)
     {
-        NSLog(@"reGeocode:%@", reGeocode);
+        self.alwaysLocationBlock(YES, latitude, longitude, YES, reGeocode.formattedAddress, reGeocode.POIName, reGeocode.citycode, reGeocode.adcode);
+    } else {
+        self.alwaysLocationBlock(YES, latitude, longitude, NO, @"", @"", @"", @"");
     }
 }
 
