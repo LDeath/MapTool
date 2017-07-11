@@ -9,7 +9,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MAFMapTool"
-  s.version      = "0.1.1"
+  s.version      = "0.1.2"
   s.summary      = "高德地图常用方法封装"
   
   s.homepage     = "https://github.com/LDeath/MapTool"

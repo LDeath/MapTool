@@ -296,7 +296,7 @@
     self.locationManager = [[AMapLocationManager alloc] init];
     self.locationManager.delegate = self;
     //设置定位最小更新距离方法如下，单位米。当两次定位距离满足设置的最小更新距离时，SDK会返回符合要求的定位结果
-    self.locationManager.distanceFilter = 200;
+    self.locationManager.distanceFilter = 5;
     //持续定位是否返回逆地理信息，默认NO
     self.locationManager.locatingWithReGeocode = YES;
     //iOS 9（包含iOS 9）之后新特性：将允许出现这种场景，同一app中多个locationmanager：一些只能在前台定位，另一些可在后台定位，并可随时禁止其后台定位。
@@ -321,7 +321,7 @@
     // 带逆地理（返回坐标和地址信息）。将下面代码中的 YES 改成 NO ，则不会返回地址信息。
     [self.locationManager requestLocationWithReGeocode:YES completionBlock:^(CLLocation *location, AMapLocationReGeocode *regeocode, NSError *error) {
         if (error) {
-            self.signleLocationBlock(NO, @"", @"", NO, @"", @"", @"", @"");
+            self.signleLocationBlock(NO, @"", @"", NO, @"", @"", @"", @"", location, regeocode);
             if (error.code == AMapLocationErrorLocateFailed) {
                 return;
             }
@@ -330,9 +330,9 @@
         NSString *latitude = [NSString stringWithFormat:@"%f", location.coordinate.latitude];
         NSString *longitude = [NSString stringWithFormat:@"%f", location.coordinate.longitude];
         if (regeocode) {
-            self.signleLocationBlock(YES, latitude, longitude, YES, regeocode.formattedAddress, regeocode.POIName, regeocode.citycode, regeocode.adcode);
+            self.signleLocationBlock(YES, latitude, longitude, YES, regeocode.formattedAddress, regeocode.POIName, regeocode.citycode, regeocode.adcode, location, regeocode);
         } else {
-            self.signleLocationBlock(YES, latitude, longitude, NO, @"", @"", @"", @"");
+            self.signleLocationBlock(YES, latitude, longitude, NO, @"", @"", @"", @"", location, regeocode);
         }
     }];
 }
@@ -360,9 +360,9 @@
     NSString *longitude = [NSString stringWithFormat:@"%f", location.coordinate.longitude];
     if (reGeocode)
     {
-        self.alwaysLocationBlock(YES, latitude, longitude, YES, reGeocode.formattedAddress, reGeocode.POIName, reGeocode.citycode, reGeocode.adcode);
+        self.alwaysLocationBlock(YES, latitude, longitude, YES, reGeocode.formattedAddress, reGeocode.POIName, reGeocode.citycode, reGeocode.adcode, location, reGeocode);
     } else {
-        self.alwaysLocationBlock(YES, latitude, longitude, NO, @"", @"", @"", @"");
+        self.alwaysLocationBlock(YES, latitude, longitude, NO, @"", @"", @"", @"", location, reGeocode);
     }
 }
 

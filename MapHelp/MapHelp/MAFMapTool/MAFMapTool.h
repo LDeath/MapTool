@@ -8,8 +8,10 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+@class CLLocation;
+@class AMapLocationReGeocode;
 
-typedef void (^MapLocationBlock)(BOOL isSuccess, NSString *latitude, NSString *longitude, BOOL isHaveInfo, NSString *address, NSString *name, NSString * cityCode, NSString *adCode);
+typedef void (^MapLocationBlock)(BOOL isSuccess, NSString *latitude, NSString *longitude, BOOL isHaveInfo, NSString *address, NSString *name, NSString * cityCode, NSString *adCode, CLLocation *location, AMapLocationReGeocode *regeocode);
 typedef void (^MapSearchBlock)(NSArray *dataArr, NSInteger page);
 typedef void (^MapOfflineUpdateBlock)(BOOL isUpdate);
 //0下载成功 1取消 2发生错误 3下载过程中 4全部下载完成
