@@ -19,7 +19,7 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     
-    [[MAFMapTool sharedInstance] initMapWithKey:@"af6e4d2af773666e751ae79e3d1a0d04"];
+    [[[MAFMapTool alloc] init] initMapWithKey:@"af6e4d2af773666e751ae79e3d1a0d04"];
     
     return YES;
 }

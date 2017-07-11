@@ -13,13 +13,22 @@
 
 @interface ViewController ()
 
+@property (nonatomic, strong) MAFMapTool *mapTool;
+
 @end
 
 @implementation ViewController
 
+- (MAFMapTool *)mapTool {
+    if (_mapTool == nil) {
+        _mapTool = [[MAFMapTool alloc] init];
+    }
+    return _mapTool;
+}
+
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
-    [[MAFMapTool sharedInstance] needShowAnnotationWithIsNeedSearch:YES];
+    [self.mapTool needShowAnnotationWithIsNeedSearch:YES];
 }
 
 - (void)viewDidLoad {
@@ -27,19 +36,23 @@
     // Do any additional setup after loading the view, typically from a nib.
     
     
-    MAMapView *mapView = [[MAFMapTool sharedInstance] getMAMapViewWithFrame:self.view.bounds];
+    UIView *mapView = [self.mapTool getMAMapViewWithFrame:self.view.bounds];
     ///把地图添加至view
     [self.view addSubview:mapView];
     
-//    [[MAFMapTool sharedInstance] setOfflineMap];
-    [[MAFMapTool sharedInstance] checkOfflineMap];
-    [[MAFMapTool sharedInstance] downloadNationWideOfflineMap];
-    [[MAFMapTool sharedInstance] downloadCityOfflineMapWithCityCode:@"023"];
-    [[MAFMapTool sharedInstance] initLocationMap];
-    [[MAFMapTool sharedInstance] singleLocation];
-    [[MAFMapTool sharedInstance] startAlwaysLocation];
+//    [self.mapTool setOfflineMap];
+    [self.mapTool checkOfflineMap];
+    [self.mapTool downloadNationWideOfflineMap];
+    [self.mapTool downloadCityOfflineMapWithCityCode:@"023"];
+    [self.mapTool initLocationMap];
+//    [self.mapTool singleLocationWithLocationBlock:^(BOOL isSuccess, NSString *latitude, NSString *longitude, BOOL isHaveInfo, NSString *address, NSString *name, NSString *cityCode, NSString *adCode) {
+//        
+//    }];
+    [self.mapTool startAlwaysLocationWithLocationBlock:^(BOOL isSuccess, NSString *latitude, NSString *longitude, BOOL isHaveInfo, NSString *address, NSString *name, NSString *cityCode, NSString *adCode) {
+        
+    }];
     
-//    [[MAFMapTool sharedInstance] searchKeyWord:@"舜泰广场" andPage:1];
+//    [self.mapTool searchKeyWord:@"舜泰广场" andPage:1];
     
 }
 
