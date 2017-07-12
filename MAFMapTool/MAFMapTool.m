@@ -108,7 +108,7 @@
     self.isNeedSearch = isNeedSearch;
     self.annotation = [[MAPointAnnotation alloc] init];
     self.annotation.lockedToScreen = YES;
-    self.annotation.lockedScreenPoint = CGPointMake(self.mapView.center.x, self.mapView.center.y);
+    self.annotation.lockedScreenPoint = CGPointMake(self.mapView.frame.size.width / 2, self.mapView.frame.size.height / 2);
     [self.mapView addAnnotation:self.annotation];
 }
 #pragma mark MAMapViewDelegate
@@ -121,6 +121,9 @@
     }
 }
 - (MAAnnotationView *)mapView:(MAMapView *)mapView viewForAnnotation:(id<MAAnnotation>)annotation {
+    if ([annotation isKindOfClass:[MAUserLocation class]]) {
+        return nil;
+    }
     if ([annotation isKindOfClass:[MAPointAnnotation class]])
     {
         static NSString *pointReuseIndentifier = @"pointReuseIndentifier";
@@ -147,6 +150,10 @@
     request.offset = 20;
     request.page = page;
     /*  搜索SDK 3.2.0 中新增加的功能，只搜索本城市的POI。*/
+    NSString *locationCity = [[NSUserDefaults standardUserDefaults] objectForKey:@"locationCity"];
+    if (locationCity != nil && ![locationCity isEqualToString:@""]) {
+        request.city = locationCity;
+    }
     request.cityLimit           = YES;
     request.requireSubPOIs      = YES;
     [self.search AMapPOIKeywordsSearch:request];
